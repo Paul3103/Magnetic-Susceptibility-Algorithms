@@ -30,6 +30,8 @@ class magSusCalculator:
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
         self.setSpin(npValues[2])
+        self.setEig(8)
+
 
     def getAngm(self):
         return this._angm
@@ -38,6 +40,13 @@ class magSusCalculator:
         return self._H
     def getSpin(self):
         return self._spin
+    
+    def getEig(self):
+        return self._eig
+
+    def setEig(self,newEig):
+        self._eig = newEig
+
     def setAngm(self,newAngm):
         self._angm = newAngm
 
@@ -47,12 +56,23 @@ class magSusCalculator:
     def setSpin(self,newSpin):
         self._spin = newSpin
 
+    def jaxianApproach(self):
+        '''
+	Method 1: Jakobs Original implementation using JAX
+        Method modified from angmom_suite/crystal.py source code
+        Code removed will be reimplemented when required (Actually doing calcs with eigenvalues)
+        '''
+    
+        eig, vec = jnp.linalg.eigh(self.getHam())
+        labs = np.unique(np.around(eig, 8), return_inverse=True)[1]
+        print(labs)
+        return eig
 
     def davidsonD(self):
         '''
         Method 6: Do method 3 using davidson diagonalisation to find the eigenvalues
         
-        Credit to James Gong: https://joshuagoings.com/2013/08/23/davidsons-method/
+        Credit to James Going: https://joshuagoings.com/2013/08/23/davidsons-method/
         Block Davidson method for finding the first few
 	    lowest eigenvalues of a large, diagonally dominant,
         sparse Hermitian matrix (e.g. Hamiltonian)
@@ -123,7 +143,7 @@ class magSusCalculator:
 
         returns E <- set of eigenvalues
         '''
-        eig = 4	
+        
         start_numpy = time.time()
 
         E,Vec = np.linalg.eig(self.getHam())
@@ -133,15 +153,14 @@ class magSusCalculator:
 
         # End of Numpy diagonalization. Print results.
 
-        print("numpy = ", E[:eig],";",
-            end_numpy - start_numpy, "seconds") 
+        #print("numpy = ", E[:self._eig],";",end_numpy - start_numpy, "seconds") 
         return E
     
     def loadHDF5(self,filename):
         '''
         method takes in a hdf5 file and reads it into the program
 
-        Returns 2D array containing each array associtated with a key
+        Returns 2D array containing each array associated with a key
         '''
 
         with h5py.File(filename, "r") as selectedFile:
@@ -167,16 +186,7 @@ class magSusCalculator:
         return ds_arr
 
 
-    def jaxianApproach(self):
-        '''
-        Method modified from angmom_suite/crystal.py source code
-        Code removed will be reimplemented when required
-        '''
     
-        eig, vec = jnp.linalg.eigh(self.getHam())
-        labs = np.unique(np.around(eig, 8), return_inverse=True)[1]
-        print(labs)
-        return eig
 
 
 
