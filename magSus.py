@@ -30,11 +30,11 @@ class magSusCalculator:
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
         self.setSpin(npValues[2])
-        self.setEig(8)
+        self.setEig(4)
 
 
     def getAngm(self):
-        return this._angm
+        return self._angm
     
     def getHam(self):
         return self._H
@@ -65,61 +65,52 @@ class magSusCalculator:
     
         eig, vec = jnp.linalg.eigh(self.getHam())
         labs = np.unique(np.around(eig, 8), return_inverse=True)[1]
-        print(labs)
+        #print(labs)
         return eig
 
     def davidsonD(self):
         '''
-        Method 6: Do method 3 using davidson diagonalisation to find the eigenvalues
+        Method 6: Do method 3 using Davidson diagonalisation to find the eigenvalues
         
         Credit to James Going: https://joshuagoings.com/2013/08/23/davidsons-method/
         Block Davidson method for finding the first few
-	    lowest eigenvalues of a large, diagonally dominant,
-        sparse Hermitian matrix (e.g. Hamiltonian)
+        lowest eigenvalues of a large, diagonally dominant, sparse Hermitian matrix (e.g. Hamiltonian)
+        Currently not calculating accurate eigenvalues for sample 16x16 matrix
         '''
-        
-        n = 1200			# Dimension of matrix
-        tol = 1e-8				# Convergence tolerance
-        mmax = n//2				# Maximum number of iterations	
 
+        useHam = self.getHam()  # This is the matrix to be calculated
 
+        n = useHam.shape[0]  # Dimension of matrix, assuming it's a square matrix
+        tol = 1e-10  # Convergence tolerance
+        k = 8  # Number of initial guess vectors
+        eig = self.getEig()  # Number of eigenvalues to solve
+        mmax = min(k * 20, n)  # Maximum number of iterations, use a reasonable value
 
-        #Change so that the Hamiltonian is being diagonalised
-        sparsity = 0.0001
-        A = np.zeros((n,n))
-        for i in range(0,n):
-            A[i,i] = i + 1 
-        A = A + sparsity*np.random.randn(n,n) 
-        A = (A.T + A)/2 
-
-
-        k = 8					# number of initial guess vectors 
-        eig = 4					# number of eignvalues to solve 
-        t = np.eye(n,k)			# set of k unit vectors as guess
-        V = np.zeros((n,n))		# array of zeros to hold guess vec
-        I = np.eye(n)			# identity matrix same dimen as A
+        t = np.eye(n, k)  # Set of k unit vectors as guess
+        V = np.zeros((n, n))  # Array of zeros to hold guess vectors
+        I = np.eye(n)  # Identity matrix same dimension as useHam
 
         # Begin block Davidson routine
-
         start_davidson = time.time()
 
-        for m in range(k,mmax,k):
+        for m in range(k, mmax, k):
             if m <= k:
-                for j in range(0,k):
-                    V[:,j] = t[:,j]/np.linalg.norm(t[:,j])
-                theta_old = 1 
-            elif m > k:
+                for j in range(0, k):
+                    V[:, j] = t[:, j] / np.linalg.norm(t[:, j])
+                theta_old = 1
+            else:
                 theta_old = theta[:eig]
-            V[:,:m],R = np.linalg.qr(V[:,:m])
-            T = np.dot(V[:,:m].T,np.dot(A,V[:,:m]))
-            THETA,S = np.linalg.eig(T)
+
+            V[:, :m], R = np.linalg.qr(V[:, :m])
+            T = np.dot(V[:, :m].T, np.dot(useHam, V[:, :m]))  # Use the provided "useHam" matrix
+            THETA, S = np.linalg.eig(T)
             idx = THETA.argsort()
             theta = THETA[idx]
-            s = S[:,idx]
-            for j in range(0,k):
-                w = np.dot((A - theta[j]*I),np.dot(V[:,:m],s[:,j])) 
-                q = w/(theta[j]-A[j,j])
-                V[:,(m+j)] = q
+            s = S[:, idx]
+            for j in range(0, k):
+                w = np.dot((useHam - theta[j] * I), np.dot(V[:, :m], s[:, j]))  # Use "useHam" matrix
+                q = w / (theta[j] - useHam[j, j])  # Use "useHam" matrix
+                #V[:, (m + j)] = q
             norm = np.linalg.norm(theta[:eig] - theta_old)
             if norm < tol:
                 break
@@ -127,13 +118,12 @@ class magSusCalculator:
         end_davidson = time.time()
 
         # End of block Davidson. Print results.
+        E = theta[:eig]
+        E = np.sort(E)
+        print("davidson = ", theta[:eig], ";", end_davidson - start_davidson, "seconds")
 
-        print("davidson = ", theta[:eig],";",
-            end_davidson - start_davidson, "seconds")
-
-
- 
-        return theta[:eig]
+      
+        return E
 
 
     def testEign(self):
@@ -193,5 +183,8 @@ class magSusCalculator:
 
 mag = magSusCalculator("ops.hdf5")
 
-print(mag.testEign())
-print(mag.jaxianApproach())
+mag.davidsonD()
+#print(mag.davidsonD()[:4])
+#print(mag.testEign()[:4])
+#print(mag.jaxianApproach()[:4])
+
