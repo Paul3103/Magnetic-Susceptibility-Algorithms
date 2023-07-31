@@ -68,17 +68,24 @@ class magSusCalculator:
         #print(labs)
         return eig
 
-
-
-    def davidsonD(self):
+    def davidson_algorithm(self):
         '''
+        Method not just borrowed from online
+        '''
+        pass
+
+
+
+    '''
+    def davidsonD(self):
+        
         Method 6: Do method 3 using Davidson diagonalisation to find the eigenvalues
         
         Credit to James Going: https://joshuagoings.com/2013/08/23/davidsons-method/
         Block Davidson method for finding the first few
         lowest eigenvalues of a large, diagonally dominant, sparse Hermitian matrix (e.g. Hamiltonian)
         Currently not calculating accurate eigenvalues for sample 16x16 matrix
-        '''
+        
         
         useHam = self.getHam()  # This is the matrix to be calculated
         #useHam = np.real(useHam)
@@ -87,7 +94,7 @@ class magSusCalculator:
         tol = 1e-10  # Convergence tolerance
         k = 8  # Number of initial guess vectors
         eig = self.getEig()  # Number of eigenvalues to solve
-        mmax = max(k * 20, n)  # Maximum number of iterations, use a reasonable value
+        mmax = min(k * 20, n)  # Maximum number of iterations, use a reasonable value
 
         t = np.eye(n, k)  # Set of k unit vectors as guess
         V = np.zeros((n, n), dtype=complex)  # Array of zeros to hold guess vectors
@@ -127,7 +134,7 @@ class magSusCalculator:
 
       
         return E
-
+    '''
    
 
 # Example usage:
