@@ -68,6 +68,8 @@ class magSusCalculator:
         #print(labs)
         return eig
 
+
+
     def davidsonD(self):
         '''
         Method 6: Do method 3 using Davidson diagonalisation to find the eigenvalues
@@ -77,17 +79,18 @@ class magSusCalculator:
         lowest eigenvalues of a large, diagonally dominant, sparse Hermitian matrix (e.g. Hamiltonian)
         Currently not calculating accurate eigenvalues for sample 16x16 matrix
         '''
-
+        
         useHam = self.getHam()  # This is the matrix to be calculated
+        #useHam = np.real(useHam)
 
         n = useHam.shape[0]  # Dimension of matrix, assuming it's a square matrix
         tol = 1e-10  # Convergence tolerance
         k = 8  # Number of initial guess vectors
         eig = self.getEig()  # Number of eigenvalues to solve
-        mmax = min(k * 20, n)  # Maximum number of iterations, use a reasonable value
+        mmax = max(k * 20, n)  # Maximum number of iterations, use a reasonable value
 
         t = np.eye(n, k)  # Set of k unit vectors as guess
-        V = np.zeros((n, n))  # Array of zeros to hold guess vectors
+        V = np.zeros((n, n), dtype=complex)  # Array of zeros to hold guess vectors
         I = np.eye(n)  # Identity matrix same dimension as useHam
 
         # Begin block Davidson routine
@@ -110,7 +113,7 @@ class magSusCalculator:
             for j in range(0, k):
                 w = np.dot((useHam - theta[j] * I), np.dot(V[:, :m], s[:, j]))  # Use "useHam" matrix
                 q = w / (theta[j] - useHam[j, j])  # Use "useHam" matrix
-                #V[:, (m + j)] = q
+                V[:, (m + j)] = q
             norm = np.linalg.norm(theta[:eig] - theta_old)
             if norm < tol:
                 break
@@ -125,6 +128,11 @@ class magSusCalculator:
       
         return E
 
+   
+
+# Example usage:
+# Define your sparse symmetric matrix A and the number of eigenvalues k to find
+# eigvals, eigvecs = lanczos(A, k)
 
     def testEign(self):
         '''
@@ -185,6 +193,7 @@ mag = magSusCalculator("ops.hdf5")
 
 mag.davidsonD()
 #print(mag.davidsonD()[:4])
-#print(mag.testEign()[:4])
+print(mag.testEign()[:4])
 #print(mag.jaxianApproach()[:4])
+#print(mag.lanczos(mag.getHam,4))
 
