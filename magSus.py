@@ -68,9 +68,11 @@ class magSusCalculator:
         #print(labs)
         return eig
 
-    def davidson_algorithm(self, tol=1e-8, max_iterations=100):
+    def davidson(self, tol=1e-8, max_iterations=100):
         '''
         Method not just borrowed from online
+        Returns eigenvalues and eigenvectors
+        Method 5
         '''
         start_david = time.time()
 
@@ -113,7 +115,17 @@ class magSusCalculator:
         print("davidson = ", eigenvalues[:desiredEigs], ";", finish_david - start_david, "seconds")
         return eigenvalues[:desiredEigs], eigenvectors[:, :desiredEigs]
 
+    def lanczos(self, tol = 1e-8, max_iterations = 100):
+        '''
+        Method to calculate Lanczos diagonalisation
+        Method 6
+        Returns eigenvalues and eigenvectors
+        '''
+        start_lanc = time.time() # Start timer
+        #TODO: Implement Lanczos diagonalisation
+        pass
 
+        finish_lanc = time.time() # End timer
     def testEign(self):
         '''
         Method is the numpy way of calculating eigenvalues/vectors
@@ -171,7 +183,7 @@ class magSusCalculator:
 
 mag = magSusCalculator("ops.hdf5")
 
-mag.davidson_algorithm()[0]
+mag.davidson()[0]
 mag.testEign()[:mag.getEig()]
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
