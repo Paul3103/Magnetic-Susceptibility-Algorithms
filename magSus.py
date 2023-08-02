@@ -109,6 +109,7 @@ class magSusCalculator:
             conv_check = np.max(np.abs(new_guesses - storedGuesses))
             if conv_check < tol:
                 accurate = True
+                print("Converged in", iteration, "iterations")
             storedGuesses = new_guesses
         #sortedEigs = np.sort(eigenvalues)
         finish_david = time.time()
