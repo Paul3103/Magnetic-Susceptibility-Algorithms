@@ -68,11 +68,47 @@ class magSusCalculator:
         #print(labs)
         return eig
 
-    def davidson_algorithm(self):
+    def davidson_algorithm(self, tol=1e-8, max_iterations=100):
         '''
         Method not just borrowed from online
         '''
-        pass
+        useHam = self.getHam()
+        desiredEigs = self.getEig()
+        hDim = useHam.shape[0]  # 16x16, get first dimension
+        unitVectors = np.eye(hDim, desiredEigs)  # Set of unit vectors
+        storedGuesses = np.zeros((hDim, desiredEigs))  # Empty array which will hold guesses
+        identifyHam = np.eye(hDim)  # Identity matrix for the Hamiltonian
+
+        initial = True
+        accurate = False
+        iteration = 0
+
+        while not accurate and iteration < max_iterations:
+            iteration += 1
+            if initial:
+                initial = False
+                for j in range(0, desiredEigs):
+                    storedGuesses[:, j] = unitVectors[:, j] / np.linalg.norm(unitVectors[:, j])
+            else:
+                for j in range(0, desiredEigs):
+                    matVecResult = np.dot(useHam, storedGuesses[:, j])
+                    storedGuesses[:, j] = matVecResult / np.linalg.norm(matVecResult)
+                    
+            # Form the subspace matrix
+            subspace_matrix = np.dot(storedGuesses.T, np.dot(useHam, storedGuesses))
+            eigenvalues, eigenvectors = np.linalg.eigh(subspace_matrix)
+            
+            # Form improved guesses
+            new_guesses = np.dot(storedGuesses, eigenvectors)
+            
+            # Check convergence
+            conv_check = np.max(np.abs(new_guesses - storedGuesses))
+            if conv_check < tol:
+                accurate = True
+            storedGuesses = new_guesses
+
+        return eigenvalues[:desiredEigs], eigenvectors[:, :desiredEigs]
+
 
 
 
@@ -198,9 +234,9 @@ class magSusCalculator:
 
 mag = magSusCalculator("ops.hdf5")
 
-mag.davidsonD()
+print(mag.davidson_algorithm()[0])
 #print(mag.davidsonD()[:4])
-print(mag.testEign()[:4])
+#print(mag.testEign()[:4])
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
 
