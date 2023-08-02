@@ -30,7 +30,7 @@ class magSusCalculator:
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
         self.setSpin(npValues[2])
-        self.setEig(4)
+        self.setEig(16)
 
 
     def getAngm(self):
@@ -106,76 +106,9 @@ class magSusCalculator:
             if conv_check < tol:
                 accurate = True
             storedGuesses = new_guesses
-
+        #sortedEigs = np.sort(eigenvalues)
         return eigenvalues[:desiredEigs], eigenvectors[:, :desiredEigs]
 
-
-
-
-    '''
-    def davidsonD(self):
-        
-        Method 6: Do method 3 using Davidson diagonalisation to find the eigenvalues
-        
-        Credit to James Going: https://joshuagoings.com/2013/08/23/davidsons-method/
-        Block Davidson method for finding the first few
-        lowest eigenvalues of a large, diagonally dominant, sparse Hermitian matrix (e.g. Hamiltonian)
-        Currently not calculating accurate eigenvalues for sample 16x16 matrix
-        
-        
-        useHam = self.getHam()  # This is the matrix to be calculated
-        #useHam = np.real(useHam)
-
-        n = useHam.shape[0]  # Dimension of matrix, assuming it's a square matrix
-        tol = 1e-10  # Convergence tolerance
-        k = 8  # Number of initial guess vectors
-        eig = self.getEig()  # Number of eigenvalues to solve
-        mmax = min(k * 20, n)  # Maximum number of iterations, use a reasonable value
-
-        t = np.eye(n, k)  # Set of k unit vectors as guess
-        V = np.zeros((n, n), dtype=complex)  # Array of zeros to hold guess vectors
-        I = np.eye(n)  # Identity matrix same dimension as useHam
-
-        # Begin block Davidson routine
-        start_davidson = time.time()
-
-        for m in range(k, mmax, k):
-            if m <= k:
-                for j in range(0, k):
-                    V[:, j] = t[:, j] / np.linalg.norm(t[:, j])
-                theta_old = 1
-            else:
-                theta_old = theta[:eig]
-
-            V[:, :m], R = np.linalg.qr(V[:, :m])
-            T = np.dot(V[:, :m].T, np.dot(useHam, V[:, :m]))  # Use the provided "useHam" matrix
-            THETA, S = np.linalg.eig(T)
-            idx = THETA.argsort()
-            theta = THETA[idx]
-            s = S[:, idx]
-            for j in range(0, k):
-                w = np.dot((useHam - theta[j] * I), np.dot(V[:, :m], s[:, j]))  # Use "useHam" matrix
-                q = w / (theta[j] - useHam[j, j])  # Use "useHam" matrix
-                V[:, (m + j)] = q
-            norm = np.linalg.norm(theta[:eig] - theta_old)
-            if norm < tol:
-                break
-
-        end_davidson = time.time()
-
-        # End of block Davidson. Print results.
-        E = theta[:eig]
-        E = np.sort(E)
-        print("davidson = ", theta[:eig], ";", end_davidson - start_davidson, "seconds")
-
-      
-        return E
-    '''
-   
-
-# Example usage:
-# Define your sparse symmetric matrix A and the number of eigenvalues k to find
-# eigvals, eigvecs = lanczos(A, k)
 
     def testEign(self):
         '''
@@ -235,8 +168,7 @@ class magSusCalculator:
 mag = magSusCalculator("ops.hdf5")
 
 print(mag.davidson_algorithm()[0])
-#print(mag.davidsonD()[:4])
-#print(mag.testEign()[:4])
+print(mag.testEign()[:mag.getEig()])
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
 
