@@ -72,6 +72,8 @@ class magSusCalculator:
         '''
         Method not just borrowed from online
         '''
+        start_david = time.time()
+
         useHam = self.getHam()
         desiredEigs = self.getEig()
         hDim = useHam.shape[0]  # 16x16, get first dimension
@@ -107,6 +109,8 @@ class magSusCalculator:
                 accurate = True
             storedGuesses = new_guesses
         #sortedEigs = np.sort(eigenvalues)
+        finish_david = time.time()
+        print("davidson = ", eigenvalues[:desiredEigs], ";", finish_david - start_david, "seconds")
         return eigenvalues[:desiredEigs], eigenvectors[:, :desiredEigs]
 
 
@@ -127,7 +131,7 @@ class magSusCalculator:
 
         # End of Numpy diagonalization. Print results.
 
-        #print("numpy = ", E[:self._eig],";",end_numpy - start_numpy, "seconds") 
+        print("numpy = ", E[:self._eig],";",end_numpy - start_numpy, "seconds") 
         return E
     
     def loadHDF5(self,filename):
@@ -167,8 +171,8 @@ class magSusCalculator:
 
 mag = magSusCalculator("ops.hdf5")
 
-print(mag.davidson_algorithm()[0])
-print(mag.testEign()[:mag.getEig()])
+mag.davidson_algorithm()[0]
+mag.testEign()[:mag.getEig()]
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
 
