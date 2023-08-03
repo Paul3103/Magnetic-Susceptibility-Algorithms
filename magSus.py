@@ -10,6 +10,7 @@ from jax import scipy as jscipy
 from jax import grad, jacfwd, jit, vmap
 from jax.lax import stop_gradient
 from jax.config import config
+from pylanczos import PyLanczos
 
 
 class magSusCalculator:
@@ -123,10 +124,11 @@ class magSusCalculator:
         Returns eigenvalues and eigenvectors
         '''
         start_lanc = time.time() # Start timer
-        #TODO: Implement Lanczos diagonalisation
-        pass
-
+        matrix = self.getHam()
+        engine = PyLanczos(matrix, True, 2)  # Find 2 maximum eigenpairs
+        eigenvalues, eigenvectors = engine.run()
         finish_lanc = time.time() # End timer
+        print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
     def testEign(self):
         '''
         Method is the numpy way of calculating eigenvalues/vectors
@@ -184,8 +186,10 @@ class magSusCalculator:
 
 mag = magSusCalculator("ops.hdf5")
 
-mag.davidson()[0]
 mag.testEign()[:mag.getEig()]
+mag.lanczos()
+#mag.davidson()[0]
+
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
 
