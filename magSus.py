@@ -129,6 +129,8 @@ class magSusCalculator:
         eigenvalues, eigenvectors = engine.run()
         finish_lanc = time.time() # End timer
         print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
+        return eigenvalues[:self.getEig()], eigenvectors[:, :self.getEig()]
+    
     def testEign(self):
         '''
         Method is the numpy way of calculating eigenvalues/vectors
@@ -139,7 +141,7 @@ class magSusCalculator:
         
         start_numpy = time.time()
 
-        E,Vec = np.linalg.eig(self.getHam())
+        E,Vec = np.linalg.eigh(self.getHam())
         E = np.sort(E)
 
         end_numpy = time.time()
