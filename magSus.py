@@ -163,12 +163,12 @@ class magSusCalculator:
 
             #print("Keys: %s" % f.keys())
             a_group_key = list(selectedFile.keys())[0]
-
+            print(selectedFile.keys())
 
             # If a_group_key is a group name, 
             # this gets the object names in the group and returns as a list
             data = list(selectedFile[a_group_key])
-
+            #print(a_group_key)
 
             # If a_group_key is a dataset name, 
             # this gets the dataset values and returns as a list
@@ -181,7 +181,35 @@ class magSusCalculator:
         return ds_arr
 
 
-    
+    def calcMagSus(eigN,eigV,spin):
+        #This method will calculate the magnetic susceptibility of the given Hamiltonian
+            # Define the magnetic field strength
+        B = 0.01  # Example magnetic field strength
+
+        # Calculate the Bohr magneton
+        mu_B = 9.274009994e-24  # Bohr magneton in J/T
+
+        # Calculate the gyromagnetic ratio (g-factor)
+        g_factor = 2.00231930436153  # g-factor for electrons
+
+        # Calculate the prefactor for the magnetic susceptibility
+        prefactor = (mu_B * g_factor) ** 2 / (3 * spin)
+
+
+        # Calculate the susceptibility for each eigenstate
+        susceptibilities = []
+        for eigval, eigvec in zip(eigN, eigV):
+            energy_diff = eigN - eigval
+            matrix_elements = np.abs(np.dot(eigV.conj().T, np.dot(spin, eigV))) ** 2
+            susceptibility = np.sum(matrix_elements * energy_diff) / (B * eigval)
+            susceptibilities.append(susceptibility)
+
+        # Calculate the total magnetic susceptibility
+        total_susceptibility = prefactor * np.sum(susceptibilities)
+
+        print("Total Magnetic Susceptibility:", total_susceptibility)
+
+            
 
 
 
