@@ -210,6 +210,10 @@ class magSusCalculator:
         print("Total Magnetic Susceptibility:", total_susceptibility)
 
             
+    def hellmanFeynamnn(self):
+        dHdB = -2
+        waveFunction = self.getSpin() # Check if spin related to wave function
+        return np.sum(waveFunction*dHdB*waveFunction)
 
 
 
