@@ -27,6 +27,8 @@ class magSusCalculator:
 
     def __init__(self,fileName):
         #Load values from speci
+        global kB
+        kB = 1.380649e-23  # Boltzmann constant in J/K
         npValues = self.loadHDF5(fileName)
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
@@ -182,7 +184,7 @@ class magSusCalculator:
 
 
     def calcXalpha(self):
-        kB = 1.380649e-23  # Boltzmann constant in J/K
+        
         uB = 9.274010e-24  # Bohr magneton in J/T
 
         X_alpha = (kB * temp * d_lnZ_d_B_alpha) / (uB * B_alpha)
@@ -195,7 +197,9 @@ class magSusCalculator:
         waveFunction = self.getSpin() # Check if spin related to wave function
         return np.sum(waveFunction*dHdB*waveFunction)
 
-
+    def partition_function(energies, temperature): #Z = sum(e^(-E/kT))
+        Z = np.sum(np.exp(-energies/(kB * temperature)))
+        return Z
 
 
 mag = magSusCalculator("ops.hdf5")
