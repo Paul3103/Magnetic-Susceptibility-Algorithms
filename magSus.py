@@ -181,33 +181,13 @@ class magSusCalculator:
         return ds_arr
 
 
-    def calcMagSus(eigN,eigV,spin):
-        #This method will calculate the magnetic susceptibility of the given Hamiltonian
-            # Define the magnetic field strength
-        B = 0.01  # Example magnetic field strength
+    def calcXalpha(self):
+        kB = 1.380649e-23  # Boltzmann constant in J/K
+        uB = 9.274010e-24  # Bohr magneton in J/T
 
-        # Calculate the Bohr magneton
-        mu_B = 9.274009994e-24  # Bohr magneton in J/T
+        X_alpha = (kB * temp * d_lnZ_d_B_alpha) / (uB * B_alpha)
+        return X_alpha
 
-        # Calculate the gyromagnetic ratio (g-factor)
-        g_factor = 2.00231930436153  # g-factor for electrons
-
-        # Calculate the prefactor for the magnetic susceptibility
-        prefactor = (mu_B * g_factor) ** 2 / (3 * spin)
-
-
-        # Calculate the susceptibility for each eigenstate
-        susceptibilities = []
-        for eigval, eigvec in zip(eigN, eigV):
-            energy_diff = eigN - eigval
-            matrix_elements = np.abs(np.dot(eigV.conj().T, np.dot(spin, eigV))) ** 2
-            susceptibility = np.sum(matrix_elements * energy_diff) / (B * eigval)
-            susceptibilities.append(susceptibility)
-
-        # Calculate the total magnetic susceptibility
-        total_susceptibility = prefactor * np.sum(susceptibilities)
-
-        print("Total Magnetic Susceptibility:", total_susceptibility)
 
             
     def hellmanFeynamnn(self):
