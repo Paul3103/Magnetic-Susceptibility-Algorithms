@@ -28,7 +28,9 @@ class magSusCalculator:
     def __init__(self,fileName):
         #Load values from speci
         global kB
+        global uB
         kB = 1.380649e-23  # Boltzmann constant in J/K
+        uB = 9.2740100783e-24  # Bohr magneton in J/T
         npValues = self.loadHDF5(fileName)
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
@@ -119,7 +121,7 @@ class magSusCalculator:
         print("davidson = ", eigenvalues[:desiredEigs], ";", finish_david - start_david, "seconds")
         return eigenvalues[:desiredEigs], eigenvectors[:, :desiredEigs]
 
-    def lanczos(self, tol = 1e-8, max_iterations = 100):
+    def lanczos(self):
         '''
         Method to calculate Lanczos diagonalisation
         Method 6
@@ -189,6 +191,18 @@ class magSusCalculator:
         first = np.dot(eigenfunction,dHdB)
         second = np.dot(first,eigenfunction)
         return second
+
+    def calcMagSus(self,bAlpha):
+        Z = 0
+        sum = 0
+        eigV = self.davidson()[0]
+        dEdB = self.hellmanFeynamnn(self.getHam(),eigV)
+        dim = self.getHam().shape[0]
+        for i in range(dim):
+            sum += -(dEdB[i])*np.exp(self.getHam()[i]/(kB*self.getTemp())) # sum of dE/dB * e ^ (-E/kBT)
+            Z += np.exp(self.getHam()[i]/(kB*self.getTemp())) # sum of e ^ (-E/kBT) = Z
+        magSus = 1/(Z*uB*bAlpha)*(sum))    # 1/(Z*uB*bAlpha) * sum of dE/dB * e ^ (-E/kBT)
+        return magSus
 
 mag = magSusCalculator("ops.hdf5")
 
