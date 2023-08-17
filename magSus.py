@@ -10,7 +10,7 @@ from jax import scipy as jscipy
 from jax import grad, jacfwd, jit, vmap
 from jax.lax import stop_gradient
 from jax.config import config
-from pylanczos import PyLanczos
+#from pylanczos import PyLanczos
 
 
 class magSusCalculator:
@@ -183,30 +183,18 @@ class magSusCalculator:
         return ds_arr
 
 
-    def calcXalpha(self):
-        
-        uB = 9.274010e-24  # Bohr magneton in J/T
-
-        X_alpha = (kB * temp * d_lnZ_d_B_alpha) / (uB * B_alpha)
-        return X_alpha
-
 
             
-    def hellmanFeynamnn(self):
-        dHdB = -2
-        waveFunction = self.getSpin() # Check if spin related to wave function
-        return np.sum(waveFunction*dHdB*waveFunction)
-
-    def partition_function(energies, temperature): #Z = sum(e^(-E/kT))
-        Z = np.sum(np.exp(-energies/(kB * temperature)))
-        return Z
-
+    def hellmanFeynamnn(self,dHdB,eigenfunction):
+        first = np.dot(eigenfunction,dHdB)
+        second = np.dot(first,eigenfunction)
+        return second
 
 mag = magSusCalculator("ops.hdf5")
 
 mag.testEign()[:mag.getEig()]
-mag.lanczos()
-#mag.davidson()[0]
+#mag.lanczos()
+mag.davidson()[0]
 
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
