@@ -10,7 +10,7 @@ from jax import scipy as jscipy
 from jax import grad, jacfwd, jit, vmap
 from jax.lax import stop_gradient
 from jax.config import config
-from pylanczos import PyLanczos
+#from pylanczos import PyLanczos
 
 
 class magSusCalculator:
@@ -79,6 +79,7 @@ class magSusCalculator:
         Returns eigenvalues and eigenvectors
         Method 5
         '''
+        print("davidson begins")
         start_david = time.time()
 
         useHam = self.getHam()
@@ -142,7 +143,7 @@ class magSusCalculator:
 
         returns E <- set of eigenvalues
         '''
-        
+        print("numpy diagonalization begins")
         start_numpy = time.time()
 
         E,Vec = np.linalg.eigh(self.getHam())
@@ -167,7 +168,7 @@ class magSusCalculator:
 
             #print("Keys: %s" % f.keys())
             a_group_key = list(selectedFile.keys())[0]
-            print(selectedFile.keys())
+            #print(selectedFile.keys())
 
             # If a_group_key is a group name, 
             # this gets the object names in the group and returns as a list
@@ -211,8 +212,8 @@ class magSusCalculator:
         magSus = 1/(Z*uB*bAlpha)*(sum)    # 1/(Z*uB*bAlpha) * sum of dE/dB * e ^ (-E/kBT)
         return magSus
 
-mag = magSusCalculator("ops.hdf5")
-
+mag = magSusCalculator("3gbOps.hdf5")
+#mag = magSusCalculator("ops.hdf5")
 mag.testEign()[:mag.getEig()]
 #mag.lanczos()
 mag.davidson()[0]
