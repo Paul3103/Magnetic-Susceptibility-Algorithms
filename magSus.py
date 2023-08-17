@@ -10,7 +10,7 @@ from jax import scipy as jscipy
 from jax import grad, jacfwd, jit, vmap
 from jax.lax import stop_gradient
 from jax.config import config
-#from pylanczos import PyLanczos
+from pylanczos import PyLanczos
 
 
 class magSusCalculator:
@@ -201,7 +201,7 @@ class magSusCalculator:
         for i in range(dim):
             sum += -(dEdB[i])*np.exp(self.getHam()[i]/(kB*self.getTemp())) # sum of dE/dB * e ^ (-E/kBT)
             Z += np.exp(self.getHam()[i]/(kB*self.getTemp())) # sum of e ^ (-E/kBT) = Z
-        magSus = 1/(Z*uB*bAlpha)*(sum))    # 1/(Z*uB*bAlpha) * sum of dE/dB * e ^ (-E/kBT)
+        magSus = 1/(Z*uB*bAlpha)*(sum)    # 1/(Z*uB*bAlpha) * sum of dE/dB * e ^ (-E/kBT)
         return magSus
 
 mag = magSusCalculator("ops.hdf5")
