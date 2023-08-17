@@ -192,10 +192,15 @@ class magSusCalculator:
         second = np.dot(first,eigenfunction)
         return second
 
-    def calcMagSus(self,bAlpha):
+    def calcMagSus(self,bAlpha,eigV):
+        '''
+        Method to calculate magnetic susceptibility
+        Inputs: bAlpha <- 
+                eigV <- eigenvalues
+        Outputs: magSus <- magnetic susceptibility
+        '''
         Z = 0
         sum = 0
-        eigV = self.davidson()[0]
         dEdB = self.hellmanFeynamnn(self.getHam(),eigV)
         dim = self.getHam().shape[0]
         for i in range(dim):
