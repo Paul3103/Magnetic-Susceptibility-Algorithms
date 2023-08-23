@@ -212,8 +212,8 @@ class magSusCalculator:
         magSus = 1/(Z*uB*bAlpha)*(sum)    # 1/(Z*uB*bAlpha) * sum of dE/dB * e ^ (-E/kBT)
         return magSus
 
-mag = magSusCalculator("3gbOps.hdf5")
-#mag = magSusCalculator("ops.hdf5")
+#mag = magSusCalculator("3gbOps.hdf5")
+mag = magSusCalculator("ops.hdf5")
 mag.testEign()[:mag.getEig()]
 mag.lanczos()
 mag.davidson()[0]
