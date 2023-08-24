@@ -185,6 +185,14 @@ class magSusCalculator:
     
         return ds_arr
 
+    def zeemanHam(self):
+        #u * B <- (1 0 0) B0 <- B is just some vector, magnetism * B0
+        # ^-- u = uB. angm + ge . spin (spin is a 3xNxN matrix)
+        pass
+    def deriveH(self):
+        #dH/db is dHzeeman/ dBalpha because input hamiltonian is a constant == d/dBalpha [uxBx +uyBy + uzBz] == ualpha
+        #Return [uxBx,uyBy,uzBz]
+        pass
 
 
             
