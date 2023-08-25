@@ -26,8 +26,8 @@ from scipy import integrate
 
 from hpc_suite.store import Store
 
-from . import utils as ut
-from .basis import unitary_transform, cartesian_op_squared, rotate_cart, \
+import utils as ut
+from basis import unitary_transform, cartesian_op_squared, rotate_cart, \
     sfy, calc_ang_mom_ops, make_angmom_ops_from_mult, project_angm_basis, \
     Term, Level, couple, sf2ws, sf2ws_amfi, extract_blocks, from_blocks, \
     dissect_array, ANGM_SYMBOLS, TOTJ_SYMBOLS

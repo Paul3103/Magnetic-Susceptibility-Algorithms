@@ -17,7 +17,7 @@ from jax import grad, jacfwd, jit, vmap
 from jax.lax import stop_gradient
 from jax.config import config
 from pylanczos import PyLanczos
-
+import crystal as cry
 
 class magSusCalculator:
     '''
