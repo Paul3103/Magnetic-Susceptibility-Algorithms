@@ -5,6 +5,12 @@ import numpy as np
 import time
 import h5py
 
+import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.linalg import eigh
+from numpy.linalg import norm
+import random
+
 from jax import numpy as jnp
 from jax import scipy as jscipy
 from jax import grad, jacfwd, jit, vmap
@@ -79,6 +85,7 @@ class magSusCalculator:
         labs = np.unique(np.around(eig, 8), return_inverse=True)[1]
         #print(labs)
         return eig
+  
 
     def davidson(self, tol=1e-8, max_iterations=100):
         '''
