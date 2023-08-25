@@ -183,7 +183,8 @@ class magSusCalculator:
             #print("Keys: %s" % f.keys())
             a_group_key = list(selectedFile.keys())[0]
             #print(selectedFile.keys())
-
+            if 'hamiltonian' in selectedFile:
+                print("HAM IS HERE")
             # If a_group_key is a group name, 
             # this gets the object names in the group and returns as a list
             data = list(selectedFile[a_group_key])
@@ -242,11 +243,9 @@ class magSusCalculator:
             magSus.append(sum/((B[alpha]*dom*uB))) # sum / Z, uB and Bx|By|Bz depending on the loop
         return magSus
 
-#mag = magSusCalculator("3gbOps.hdf5")
-mag = magSusCalculator("ops.hdf5",10)
-#mag.testEign()[:mag.getEig()]
-#mag.lanczos()
-#mag.davidson()[0]
+
+fileName = "ops.hdf5"
+mag = magSusCalculator(fileName,10)
 exampleMatrix = np.array([
     [1],
     [2],
@@ -266,8 +265,11 @@ exampleMatrix = np.array([
     [16]
 ])
 
-magSus = mag.calcMagSus(exampleMatrix, mag.lanczos()[0])
-print(magSus)
+#magSus = mag.calcMagSus(exampleMatrix, mag.lanczos()[0])
+#print(magSus)
+
+angmomSus = cry.MagneticSusceptibility(fileName,field=0.8 )
+angmomSus.evaluate(fileName)
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
 
