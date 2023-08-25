@@ -25,7 +25,7 @@ class magSusCalculator:
     7) Reformulating the expression as a matrix exponential and trying various approximations.....
     '''
 
-    def __init__(self,fileName):
+    def __init__(self,fileName,temp):
         #Load values from speci
         global kB
         global uB
@@ -37,6 +37,7 @@ class magSusCalculator:
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
         self.setSpin(npValues[2])
+        self.setTemp(temp)
         self.setEig(16)
 
 
@@ -50,6 +51,8 @@ class magSusCalculator:
     
     def getEig(self):
         return self._eig
+    def getTemp(self):
+        return self._temp
 
     def setEig(self,newEig):
         self._eig = newEig
@@ -62,6 +65,8 @@ class magSusCalculator:
 
     def setSpin(self,newSpin):
         self._spin = newSpin
+    def setTemp(self,newTemp):
+        self._temp = newTemp
 
     def jaxianApproach(self):
         '''
@@ -81,7 +86,7 @@ class magSusCalculator:
         Returns eigenvalues and eigenvectors
         Method 5
         '''
-        print("davidson begins")
+        #print("davidson begins")
         start_david = time.time()
 
         useHam = self.getHam()
@@ -117,11 +122,11 @@ class magSusCalculator:
             conv_check = np.max(np.abs(new_guesses - storedGuesses))
             if conv_check < tol:
                 accurate = True
-                print("Converged in", iteration, "iterations")
+                #print("Converged in", iteration, "iterations")
             storedGuesses = new_guesses
         #sortedEigs = np.sort(eigenvalues)
         finish_david = time.time()
-        print("davidson = ", eigenvalues[:desiredEigs], ";", finish_david - start_david, "seconds")
+        #print("davidson = ", eigenvalues[:desiredEigs], ";", finish_david - start_david, "seconds")
         return eigenvalues[:desiredEigs], eigenvectors[:, :desiredEigs]
 
     def lanczos(self):
@@ -135,7 +140,7 @@ class magSusCalculator:
         engine = PyLanczos(matrix, True, self.getEig())  # Find maximum eigenpairs
         eigenvalues, eigenvectors = engine.run()
         finish_lanc = time.time() # End timer
-        print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
+        #print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
         return eigenvalues[:self.getEig()], eigenvectors[:, :self.getEig()]
     
     def testEign(self):
@@ -145,7 +150,7 @@ class magSusCalculator:
 
         returns E <- set of eigenvalues
         '''
-        print("numpy diagonalization begins")
+        #print("numpy diagonalization begins")
         start_numpy = time.time()
 
         E,Vec = np.linalg.eigh(self.getHam())
@@ -155,7 +160,7 @@ class magSusCalculator:
 
         # End of Numpy diagonalization. Print results.
 
-        print("numpy = ", E[:self._eig],";",end_numpy - start_numpy, "seconds") 
+        #print("numpy = ", E[:self._eig],";",end_numpy - start_numpy, "seconds") 
         return E
     
     def loadHDF5(self,filename):
@@ -193,39 +198,69 @@ class magSusCalculator:
         #dH/db is dHzeeman/ dBalpha because input hamiltonian is a constant == d/dBalpha [uxBx +uyBy + uzBz] == ualpha
         #Return [uxBx,uyBy,uzBz]
         u = np.dot(uB,self.getAngm()) + np.dot(ge,self.getSpin()) # doing u.B is unnecessary as the partial derivate will remove the Bx/By/Bz
-        print(u)
+        #print(u)
+        ux = u[0]
+        uy = u[1]
+        uz = u[2]
+        return [ux,uy,uz]
+
 
             
-    def hellmanFeynamnn(self,dHdB,eigenfunction):
-        first = np.dot(eigenfunction,dHdB)
-        second = np.dot(first,eigenfunction)
+    def hellmanFeynamnn(self,dHdB,eigenvectors):
+        first = np.dot(eigenvectors,dHdB)
+        second = np.dot(first,eigenvectors)
         return second
 
-    def calcMagSus(self,bAlpha,eigV,temp):
+    def calcMagSus(self,B,eigV):
         '''
         Method to calculate magnetic susceptibility
-        Inputs: bAlpha <- 
+        Inputs: B <- a 3xNxN matrix
                 eigV <- eigenvalues
                 temp <- temperature
         Outputs: magSus <- magnetic susceptibility
-
         '''
-        Z = 0
-        sum = 0
-        dEdB = self.hellmanFeynamnn(self.getHam(),eigV)
+        magSus = []
         dim = self.getHam().shape[0]
-        for i in range(dim):
-            sum += -(dEdB[i])*np.exp(self.getHam()[i]/(kB*temp())) # sum of dE/dB * e ^ (-E/kBT)
-            Z += np.exp(self.getHam()[i]/(kB*temp())) # sum of e ^ (-E/kBT) = Z
-        magSus = 1/(Z*uB*bAlpha)*(sum)    # 1/(Z*uB*bAlpha) * sum of dE/dB * e ^ (-E/kBT)
+        dHdB = self.deriveH()
+        for alpha in range(len(dHdB)): #x,y,z
+            dEdB = self.hellmanFeynamnn(dHdB[alpha],eigV)
+            T = self.getTemp()
+            sum = 0
+            dom = 0
+            for i in range(dim):
+                Z = np.exp(self.getHam()[i]/(kB*T))
+                sum += -(dEdB[i])*Z # sum of dE/dB * e ^ (-E/kBT)
+                dom += Z # sum of e ^ (-E/kBT) = Z
+
+            magSus.append(sum/((B[alpha]*dom*uB))) # sum / Z, uB and Bx|By|Bz depending on the loop
         return magSus
 
 #mag = magSusCalculator("3gbOps.hdf5")
-mag = magSusCalculator("ops.hdf5")
+mag = magSusCalculator("ops.hdf5",10)
 #mag.testEign()[:mag.getEig()]
 #mag.lanczos()
 #mag.davidson()[0]
-mag.deriveH()
+exampleMatrix = np.array([
+    [1],
+    [2],
+    [3],
+    [4],
+    [5],
+    [6],
+    [7],
+    [8],
+    [9],
+    [10],
+    [11],
+    [12],
+    [13],
+    [14],
+    [15],
+    [16]
+])
+
+magSus = mag.calcMagSus(exampleMatrix, mag.lanczos()[0])
+print(magSus)
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
 
