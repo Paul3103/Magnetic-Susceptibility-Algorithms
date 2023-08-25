@@ -29,8 +29,10 @@ class magSusCalculator:
         #Load values from speci
         global kB
         global uB
+        global ge
         kB = 1.380649e-23  # Boltzmann constant in J/K
         uB = 9.2740100783e-24  # Bohr magneton in J/T
+        ge = 2.00231930436  # electron g factor
         npValues = self.loadHDF5(fileName)
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
@@ -185,15 +187,13 @@ class magSusCalculator:
     
         return ds_arr
 
-    def zeemanHam(self):
-        #u * B <- (1 0 0) B0 <- B is just some vector, magnetism * B0
-        # ^-- u = uB. angm + ge . spin (spin is a 3xNxN matrix)
-        pass
     def deriveH(self):
+        #u . B <- (1 0 0) B0 <- B is just some vector, magnetism * B0
+        # ^-- u = uB. angm + ge . spin (spin is a 3xNxN matrix)
         #dH/db is dHzeeman/ dBalpha because input hamiltonian is a constant == d/dBalpha [uxBx +uyBy + uzBz] == ualpha
         #Return [uxBx,uyBy,uzBz]
-        pass
-
+        u = np.dot(uB,self.getAngm()) + np.dot(ge,self.getSpin()) # doing u.B is unnecessary as the partial derivate will remove the Bx/By/Bz
+        print(u)
 
             
     def hellmanFeynamnn(self,dHdB,eigenfunction):
@@ -222,10 +222,10 @@ class magSusCalculator:
 
 #mag = magSusCalculator("3gbOps.hdf5")
 mag = magSusCalculator("ops.hdf5")
-mag.testEign()[:mag.getEig()]
-mag.lanczos()
-mag.davidson()[0]
-
+#mag.testEign()[:mag.getEig()]
+#mag.lanczos()
+#mag.davidson()[0]
+mag.deriveH()
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
 
