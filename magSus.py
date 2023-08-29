@@ -248,6 +248,18 @@ class magSusCalculator:
         return magSus
 
 
+    def calculate_magnetism(self):
+        '''
+        Method to help understand how to calculate susceptibility
+                     dim 
+            1        ____
+          ___   *   \      dEi/dBalpha * e^(-Ei/kBT)
+          Z*uB      /
+                   /___
+                    i = 1
+          
+        '''
+        
 
 fileName = "ops.hdf5"
 temperatures1 = [1.1]

@@ -1343,7 +1343,7 @@ class MagneticSusceptibility(Store):
                  fmt='% 20.13e'):
 
         self.ops = ops
-        print(list(self.ops.keys())[0])
+        print(self.ops['hamiltonian'])
         self.temperatures = temperatures
 
         # basis options
@@ -1366,6 +1366,7 @@ class MagneticSusceptibility(Store):
 
     def evaluate(self):
         ops = self.ops
+        #print(ops['spin'])
         tensor_func = make_susceptibility_tensor(
             hamiltonian=ops['hamiltonian'],
             spin=ops['spin'], angm=ops['angm'],
