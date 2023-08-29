@@ -214,22 +214,24 @@ class magSusCalculator:
             
     def hellmanFeynman(self,dHdB,eigenvectors):
         first = np.dot(eigenvectors,dHdB)
-        second = np.dot(first,eigenvectors)
+        second = np.dot(first.conjugate().T,eigenvectors)
         return second
+
     def calcMagSus(self, B, eigV):
         '''
         Method to calculate magnetic susceptibility
-        Inputs: B <- a 3xNxN matrix
+        Inputs: B <- a float (magnetic field)
                 eigV <- eigenvalues
         Outputs: magSus <- magnetic susceptibility
         '''
         magSus = []
         dim = self.getHam().shape[0]
         dHdB = self.deriveH()
+        T = self.getTemp()
 
         for alpha in range(len(dHdB)): # Loop over x, y, z components
             dEdB = self.hellmanFeynman(dHdB[alpha], eigV)
-            T = self.getTemp()
+            
             sum_dEdB_Z = 0
             sum_Z = 0
 
@@ -240,25 +242,24 @@ class magSusCalculator:
 
             magSus_component = sum_dEdB_Z / (B* sum_Z * uB)
             scalarV = np.sum(np.abs(magSus_component))
-            magSus.append(magSus_component)
+            #magSus.append(magSus_component)
+            magSus.append(scalarV)
 
         return magSus
 
-fileName = "ops.hdf5"
 
 
 fileName = "ops.hdf5"
 temperatures1 = [1.1]
-mag = magSusCalculator(fileName,1.1)
+
 field = 0.8
 
 
+mag = magSusCalculator(fileName,1.1)
 
 
-magSus = mag.calcMagSus(field, mag.lanczos()[0])
 angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
-
-print(magSus)
+print(mag.calcMagSus(field, mag.lanczos()[0]))
 print(angmomSus.evaluate())
 
 
