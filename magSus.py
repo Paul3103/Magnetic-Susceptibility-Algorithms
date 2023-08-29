@@ -43,7 +43,7 @@ class magSusCalculator:
         self.setAngm(npValues[0])
         self.setHam(npValues[1])
         self.setSpin(npValues[2])
-        self.setTemp(temp)
+        self.setTemp(temp) #Temperature will need to be changed to a list of temperatures but for now I will only fopcs on temp =1.1 for debugging
         self.setEig(16)
 
 
@@ -212,38 +212,40 @@ class magSusCalculator:
 
 
             
-    def hellmanFeynamnn(self,dHdB,eigenvectors):
+    def hellmanFeynman(self,dHdB,eigenvectors):
         first = np.dot(eigenvectors,dHdB)
         second = np.dot(first,eigenvectors)
         return second
-
-    def calcMagSus(self,B,eigV):
+    def calcMagSus(self, B, eigV):
         '''
         Method to calculate magnetic susceptibility
         Inputs: B <- a 3xNxN matrix
                 eigV <- eigenvalues
-                temp <- temperature
         Outputs: magSus <- magnetic susceptibility
         '''
         magSus = []
         dim = self.getHam().shape[0]
         dHdB = self.deriveH()
-        for alpha in range(len(dHdB)): #x,y,z
-            dEdB = self.hellmanFeynamnn(dHdB[alpha],eigV)
-            T = self.getTemp()
-            sum = 0
-            dom = 0
-            for i in range(dim):
-                Z = np.exp(self.getHam()[i]/(kB*T))
-                sum += -(dEdB[i])*Z # sum of dE/dB * e ^ (-E/kBT)
-                dom += Z # sum of e ^ (-E/kBT) = Z
 
-            magSus.append(sum/((B[alpha]*dom*uB))) # sum / Z, uB and Bx|By|Bz depending on the loop
+        for alpha in range(len(dHdB)): # Loop over x, y, z components
+            dEdB = self.hellmanFeynman(dHdB[alpha], eigV)
+            T = self.getTemp()
+            sum_dEdB_Z = 0
+            sum_Z = 0
+
+            for i in range(dim):
+                exp_term = np.exp(self.getHam()[i] / (kB * T))
+                sum_dEdB_Z += -(dEdB[i]) * exp_term
+                sum_Z += exp_term
+
+            magSus_component = sum_dEdB_Z / (B[alpha] * sum_Z * uB)
+            scalarV = np.sum(np.abs(magSus_component))
+            magSus.append(magSus_component)
+
         return magSus
 
-
 fileName = "ops.hdf5"
-mag = magSusCalculator(fileName,10)
+mag = magSusCalculator(fileName,1.1)
 exampleMatrix = np.array([
     [1],
     [2],
@@ -265,13 +267,15 @@ exampleMatrix = np.array([
 
 
 fileName = "ops.hdf5"
-temperatures1 = [1.1,2.5,9.1]
+temperatures1 = [1.1]
+magSus = mag.calcMagSus(exampleMatrix, mag.lanczos()[0])
+scalar_values = [np.sum(np.abs(array)) for array in magSus]
+print(np.sum(np.abs(scalar_values)))
+#print(magSus)
 
-magSus = mag.calcMagSus(temperatures1, mag.lanczos()[0])
-print(magSus)
 
 
-angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 )
+angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
 print(angmomSus.evaluate())
 #print(mag.jaxianApproach()[:4])
 #print(mag.lanczos(mag.getHam,4))
