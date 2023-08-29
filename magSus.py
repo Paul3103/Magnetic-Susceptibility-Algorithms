@@ -238,45 +238,27 @@ class magSusCalculator:
                 sum_dEdB_Z += -(dEdB[i]) * exp_term
                 sum_Z += exp_term
 
-            magSus_component = sum_dEdB_Z / (B[alpha] * sum_Z * uB)
+            magSus_component = sum_dEdB_Z / (B* sum_Z * uB)
             scalarV = np.sum(np.abs(magSus_component))
             magSus.append(magSus_component)
 
         return magSus
 
 fileName = "ops.hdf5"
-mag = magSusCalculator(fileName,1.1)
-exampleMatrix = np.array([
-    [1],
-    [2],
-    [3],
-    [4],
-    [5],
-    [6],
-    [7],
-    [8],
-    [9],
-    [10],
-    [11],
-    [12],
-    [13],
-    [14],
-    [15],
-    [16]
-])
 
 
 fileName = "ops.hdf5"
 temperatures1 = [1.1]
-magSus = mag.calcMagSus(exampleMatrix, mag.lanczos()[0])
-scalar_values = [np.sum(np.abs(array)) for array in magSus]
-print(np.sum(np.abs(scalar_values)))
-#print(magSus)
+mag = magSusCalculator(fileName,1.1)
+field = 0.8
 
 
 
+
+magSus = mag.calcMagSus(field, mag.lanczos()[0])
 angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
+
+print(magSus)
 print(angmomSus.evaluate())
-#print(mag.jaxianApproach()[:4])
-#print(mag.lanczos(mag.getHam,4))
+
 

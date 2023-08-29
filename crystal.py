@@ -1366,36 +1366,25 @@ class MagneticSusceptibility(Store):
 
     def evaluate(self):
         ops = self.ops
-        if self.differential:
-            tensor_func = partial(susceptibility_tensor,
-                                  hamiltonian=ops['hamiltonian'],
-                                  spin=ops['spin'], angm=ops['angm'],
-                                  field=self.field,
-                                  differential=self.differential)
+        tensor_func = make_susceptibility_tensor(
+            hamiltonian=ops['hamiltonian'],
+            spin=ops['spin'], angm=ops['angm'],
+            field=self.field)
+
+        chi_list = [tensor_func(temp) for temp in self.temperatures]
+
+        data = {}
+
+        if False: # Change from True if you want to have the scalar of chi, false for vector
+            for temp, chi_tensor in zip(self.temperatures, chi_list):
+                scalar_chi = jnp.trace(chi_tensor) / 3
+                data[temp] = scalar_chi
         else:
-            
-            tensor_func = make_susceptibility_tensor(
-                hamiltonian=ops['hamiltonian'],
-                spin=ops['spin'], angm=ops['angm'],
-                field=self.field)
+            data = {temp: chi for temp, chi in zip(self.temperatures, chi_list)}
 
-        if self.iso:
-            def func(temp):
-                return jnp.trace(tensor_func(temp)) / 3
-        else:
-            func = tensor_func
+        return data
 
-        # vmap does not repeat the eigen decomp
-        if self.differential:
-            chi_list = [func(temp) for temp in self.temperatures]
-        else:  # non-bached more efficient when using the expm backend
-            chi_list = [func(temp) for temp in self.temperatures]
-            # chi_list = vmap(func)(jnp.array(self.temperatures))
 
-        Key = namedtuple('chi', 'temp')
-        data = {Key(temp): (temp * chi) if self.chi_T else chi
-                for temp, chi in zip(self.temperatures, chi_list)}
-        return [data], [()]
 
     def __iter__(self):
         yield from ((lab, dat) for dat, lab in zip(*self.evaluate(**self.ops)))
