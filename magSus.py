@@ -271,7 +271,7 @@ mag = magSusCalculator(fileName,1.1)
 
 
 angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
-answer = mag.calcMagSus(field, mag.lanczos()[1])
+answer = mag.calcMagSus(field, mag.lanczos()[1])  # I should be finding the eigen values/vectors of the full hamiltonian - Zeeman included
 print(answer)
 #print(np.sum(np.abs(answer)))
 print(angmomSus.evaluate())
