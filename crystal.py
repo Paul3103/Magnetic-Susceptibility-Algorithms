@@ -1343,6 +1343,7 @@ class MagneticSusceptibility(Store):
                  fmt='% 20.13e'):
 
         self.ops = ops
+        print(list(self.ops.keys())[0])
         self.temperatures = temperatures
 
         # basis options
@@ -1363,8 +1364,8 @@ class MagneticSusceptibility(Store):
 
         super().__init__(title, description, label=(), units=units, fmt=fmt)
 
-    def evaluate(self, ops):
-
+    def evaluate(self):
+        ops = self.ops
         if self.differential:
             tensor_func = partial(susceptibility_tensor,
                                   hamiltonian=ops['hamiltonian'],
@@ -1372,11 +1373,10 @@ class MagneticSusceptibility(Store):
                                   field=self.field,
                                   differential=self.differential)
         else:
-            Sops = h5py.File(ops, "r")
-            print(Sops.keys())
+            
             tensor_func = make_susceptibility_tensor(
-                hamiltonian=Sops['hamiltonian'],
-                spin=Sops['spin'], angm=Sops['angm'],
+                hamiltonian=ops['hamiltonian'],
+                spin=ops['spin'], angm=ops['angm'],
                 field=self.field)
 
         if self.iso:
