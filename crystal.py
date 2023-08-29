@@ -1343,7 +1343,7 @@ class MagneticSusceptibility(Store):
                  fmt='% 20.13e'):
 
         self.ops = ops
-        print(self.ops['hamiltonian'])
+        #print(self.ops['hamiltonian'])
         self.temperatures = temperatures
 
         # basis options
@@ -1376,7 +1376,7 @@ class MagneticSusceptibility(Store):
 
         data = {}
 
-        if False: # Change from True if you want to have the scalar of chi, false for vector
+        if True: # Change from True if you want to have the scalar of chi, false for vector
             for temp, chi_tensor in zip(self.temperatures, chi_list):
                 scalar_chi = jnp.trace(chi_tensor) / 3
                 data[temp] = scalar_chi

@@ -259,7 +259,7 @@ class magSusCalculator:
                     i = 1
           
         '''
-        
+
 
 fileName = "ops.hdf5"
 temperatures1 = [1.1]
@@ -271,7 +271,9 @@ mag = magSusCalculator(fileName,1.1)
 
 
 angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
-print(mag.calcMagSus(field, mag.lanczos()[0]))
+answer = mag.calcMagSus(field, mag.lanczos()[1])
+print(answer)
+#print(np.sum(np.abs(answer)))
 print(angmomSus.evaluate())
 
 
