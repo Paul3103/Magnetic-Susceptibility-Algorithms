@@ -91,6 +91,7 @@ class magSusCalculator:
         '''
         Method not just borrowed from online
         Returns eigenvalues and eigenvectors
+        Only worked for ops.hdf5, not 3gbOps.hdf5
         Method 5
         '''
         #print("davidson begins")
@@ -134,7 +135,7 @@ class magSusCalculator:
         #sortedEigs = np.sort(eigenvalues)
         finish_david = time.time()
         #print("davidson = ", eigenvalues[:desiredEigs], ";", finish_david - start_david, "seconds")
-        return eigenvalues[:desiredEigs], eigenvectors[:, :desiredEigs]
+        return np.sort(eigenvalues[:desiredEigs]), eigenvectors[:, :desiredEigs]
 
     def lanczos(self):
         '''
@@ -148,7 +149,7 @@ class magSusCalculator:
         eigenvalues, eigenvectors = engine.run()
         finish_lanc = time.time() # End timer
         #print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
-        return eigenvalues[:self.getEig()], eigenvectors[:, :self.getEig()]
+        return np.sort(eigenvalues[:self.getEig()]), eigenvectors[:, :self.getEig()]
     
     def testEign(self):
         '''
@@ -269,11 +270,14 @@ field = 0.8
 
 mag = magSusCalculator(fileName,1.1)
 
-
+print(mag.testEign())
+print(mag.lanczos()[0])
+print(mag.davidson()[0])
+'''
 angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
 answer = mag.calcMagSus(field, mag.lanczos()[1])  # I should be finding the eigen values/vectors of the full hamiltonian - Zeeman included
 print(answer)
 #print(np.sum(np.abs(answer)))
 print(angmomSus.evaluate())
-
+'''
 
