@@ -239,8 +239,10 @@ class magSusCalculator:
         '''
         #Find Zeeman Hamiltonian
         #zeeman = self.calcZeeman(self.getSpin(),self.getAngm(),B)
-
-        H = self.getHam() + self.zeeman_hamiltonian(self.getSpin(),self.getAngm(),B)
+        zeeman = self.zeeman_hamiltonian(self.getSpin(),self.getAngm(),B)
+        #print("ZEEMAN FOR magsus")
+        #print(zeeman)
+        H = self.getHam() + zeeman
         fullham = self.getHam() + H
         #Calculate 
         if calc_eigs == 'lanczos':
@@ -253,7 +255,7 @@ class magSusCalculator:
             print("Invalid")
             return 
         eigV = eigs[1]
-        print(eigs[0])
+        #print(eigs[0])
         magSus = []
         dim = self.getHam().shape[0]
         dHdB = self.deriveH()
