@@ -1657,6 +1657,8 @@ def molecular_magnetisation(temp, hamiltonian, spin, angm, field, algorithm='eig
 
     elif algorithm == 'eigh':
         eig, vec = jnp.linalg.eigh(h_shft)
+        #print("FOR ANGMOM")
+        #print(eig)
         eig_shft = eig - stop_gradient(eig[0])
         expH = vec @ jnp.diag(jnp.exp(-beta * eig_shft)) @ vec.T.conj()
         Z = jnp.sum(jnp.exp(-beta * eig_shft))
@@ -1693,7 +1695,8 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     h_total = hamiltonian + zeeman_hamiltonian(spin, angm, field)
     # condition matrix by diagonal shift
     eig, vec = jnp.linalg.eigh(h_total)
-
+    print("ANGMOM")
+    print(eig)
     def molecular_magnetisation(temp):
         beta = 1 / (kb * temp)  # hartree
         eig_shft = eig - stop_gradient(eig[0])

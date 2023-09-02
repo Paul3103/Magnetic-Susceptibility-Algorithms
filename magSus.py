@@ -45,6 +45,7 @@ class magSusCalculator:
         self.setSpin(npValues[2])
         self.setTemp(temp) #Temperature will need to be changed to a list of temperatures but for now I will only fopcs on temp =1.1 for debugging
         self.setEig(16)
+        #self.calcZeeman(npValues)
 
 
     def getAngm(self):
@@ -52,6 +53,8 @@ class magSusCalculator:
     
     def getHam(self):
         return self._H
+
+        
     def getSpin(self):
         return self._spin
     
@@ -59,7 +62,8 @@ class magSusCalculator:
         return self._eig
     def getTemp(self):
         return self._temp
-
+    def getZeeman(self):
+        return self._zeeman
     def setEig(self,newEig):
         self._eig = newEig
 
@@ -73,6 +77,15 @@ class magSusCalculator:
         self._spin = newSpin
     def setTemp(self,newTemp):
         self._temp = newTemp
+    def calcZeeman(self,spin, angm, field):
+        '''Method for finding the zeeman hamiltonian <- need to do for the proper eigenvalues/vectors
+        Inputs:
+        Output: np.array <- The zeeman hamiltonain'''
+        
+        u = np.dot(uB,angm) + np.dot(ge,spin)
+        Hzee = np.dot(u,field)
+        self._zeeman = Hzee
+        return Hzee
 
     def jaxianApproach(self):
         '''
@@ -137,21 +150,21 @@ class magSusCalculator:
         #print("davidson = ", eigenvalues[:desiredEigs], ";", finish_david - start_david, "seconds")
         return np.sort(eigenvalues[:desiredEigs]), eigenvectors[:, :desiredEigs]
 
-    def lanczos(self):
+    def lanczos(self,matrix):
         '''
         Method to calculate Lanczos diagonalisation
         Method 6
         Returns eigenvalues and eigenvectors
         '''
         start_lanc = time.time() # Start timer
-        matrix = self.getHam()
+        #matrix = self.getHam()
         engine = PyLanczos(matrix, True, self.getEig())  # Find maximum eigenpairs
         eigenvalues, eigenvectors = engine.run()
         finish_lanc = time.time() # End timer
         #print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
         return np.sort(eigenvalues[:self.getEig()]), eigenvectors[:, :self.getEig()]
     
-    def testEign(self):
+    def testEign(self,ham):
         '''
         Method is the numpy way of calculating eigenvalues/vectors
         also utilised the time.time() function to determine time taken for calculation
@@ -161,7 +174,7 @@ class magSusCalculator:
         #print("numpy diagonalization begins")
         start_numpy = time.time()
 
-        E,Vec = np.linalg.eigh(self.getHam())
+        E,Vec = np.linalg.eigh(ham)
         E = np.sort(E)
 
         end_numpy = time.time()
@@ -169,7 +182,7 @@ class magSusCalculator:
         # End of Numpy diagonalization. Print results.
 
         #print("numpy = ", E[:self._eig],";",end_numpy - start_numpy, "seconds") 
-        return E
+        return E,Vec
     
     def loadHDF5(self,filename):
         '''
@@ -218,13 +231,29 @@ class magSusCalculator:
         second = np.dot(first.conjugate().T,eigenvectors)
         return second
 
-    def calcMagSus(self, B, eigV):
+    def calcMagSus(self, B, calc_eigs = 'lanczos'):
         '''
         Method to calculate magnetic susceptibility
         Inputs: B <- a float (magnetic field)
-                eigV <- eigenvalues
         Outputs: magSus <- magnetic susceptibility
         '''
+        #Find Zeeman Hamiltonian
+        #zeeman = self.calcZeeman(self.getSpin(),self.getAngm(),B)
+
+        H = self.getHam() + self.zeeman_hamiltonian(self.getSpin(),self.getAngm(),B)
+        fullham = self.getHam() + H
+        #Calculate 
+        if calc_eigs == 'lanczos':
+            eigs = self.lanczos(fullham)
+        elif calc_eigs == 'davidson':
+            eigs = self.davidson(fullham)
+        elif calc_eigs == 'numpy':
+            eigs = self.testEign(fullham)
+        else:
+            print("Invalid")
+            return 
+        eigV = eigs[1]
+        print(eigs[0])
         magSus = []
         dim = self.getHam().shape[0]
         dHdB = self.deriveH()
@@ -261,6 +290,34 @@ class magSusCalculator:
           
         '''
 
+    def magmom(self,spin, angm):
+        muB = 0.5  # atomic units
+        g_e = 2.002319
+        return muB * (angm + g_e * spin)
+
+    def zeeman_hamiltonian(self,spin, angm, field):
+        """Compute Zeeman Hamiltonian in atomic units.
+
+        Parameters
+        ----------
+        spin : np.array
+            Spin operator in the SO basis.
+        angm : np.array
+            Orbital angular momentum operator in the SO basis.
+        field : np.array
+            Magnetic field in mT.
+
+        Returns
+        -------
+        np.array
+            Zeeman Hamiltonian matrix.
+        """
+
+        au2mT = 2.35051756758e5 * 1e3  # mTesla / au
+
+        # calculate zeeman operator and convert field in mT to T
+        return (jnp.array(field) / au2mT)* self.magmom(spin, angm)
+
 
 fileName = "ops.hdf5"
 temperatures1 = [1.1]
@@ -270,14 +327,16 @@ field = 0.8
 
 mag = magSusCalculator(fileName,1.1)
 
-print(mag.testEign())
-print(mag.lanczos()[0])
-print(mag.davidson()[0])
-'''
+#print(mag.testEign())
+#print(mag.lanczos()[0])
+#print(mag.davidson()[0])
+
 angmomSus = cry.MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
-answer = mag.calcMagSus(field, mag.lanczos()[1])  # I should be finding the eigen values/vectors of the full hamiltonian - Zeeman included
-print(answer)
+answer = mag.calcMagSus(field,calc_eigs='numpy')  
+#answer = mag.calcMagSus(field,calc_eigs='lanczos')  
+
+#print(answer)
+angmomSus.evaluate()
 #print(np.sum(np.abs(answer)))
-print(angmomSus.evaluate())
-'''
+#print(angmomSus.evaluate())
 
