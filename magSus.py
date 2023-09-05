@@ -322,6 +322,7 @@ class magSusCalculator:
         return (jnp.array(field) / au2mT)* self.magmom(spin, angm)
 
 
+
 fileName = "ops.hdf5"
 temperatures1 = [1.1]
 
@@ -342,4 +343,15 @@ answer = mag.calcMagSus(field,calc_eigs='numpy')
 print(angmomSus.evaluate(0))
 #print(np.sum(np.abs(answer)))
 #print(angmomSus.evaluate())
-
+'''
+mat1 = [-2.95397665e-03, -2.95397664e-03, -9.92770333e-04, -9.92770226e-04
+  ,4.95265690e-05,  4.95273956e-05,  5.15419136e-04,  5.15424715e-04
+  ,6.38918084e-04, 6.38925510e-04 , 7.67017994e-04 , 7.67018442e-04
+  ,9.32656389e-04,  9.32657495e-04,  1.04319908e-03,  1.04320303e-03]
+mat2 = [-2.95397665e-03, -2.95397664e-03, -9.92770333e-04, -9.92770226e-04
+  ,4.95265690e-05,  4.95273956e-05,  5.15419136e-04,  5.15424715e-04
+  ,6.38918084e-04,  6.38925510e-04,  7.67017994e-04,  7.67018442e-04
+  ,9.32656389e-04 , 9.32657495e-04 , 1.04319908e-03  ,1.04320303e-03]
+for i in range(0,len(mat1)):
+    print(mat1[i]==mat2[i])
+'''
