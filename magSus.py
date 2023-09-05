@@ -162,7 +162,8 @@ class magSusCalculator:
         eigenvalues, eigenvectors = engine.run()
         finish_lanc = time.time() # End timer
         #print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
-        return np.sort(eigenvalues[:self.getEig()]), eigenvectors[:, :self.getEig()]
+        map(np.real(eigenvalues))
+        return eigenvalues[:self.getEig()], eigenvectors[:, :self.getEig()]
     
     def testEign(self,ham):
         '''
@@ -338,7 +339,7 @@ answer = mag.calcMagSus(field,calc_eigs='numpy')
 #answer = mag.calcMagSus(field,calc_eigs='lanczos')  
 
 #print(answer)
-print(angmomSus.evaluate())
+print(angmomSus.evaluate(0))
 #print(np.sum(np.abs(answer)))
 #print(angmomSus.evaluate())
 

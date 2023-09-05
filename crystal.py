@@ -32,6 +32,7 @@ from basis import unitary_transform, cartesian_op_squared, rotate_cart, \
     Term, Level, couple, sf2ws, sf2ws_amfi, extract_blocks, from_blocks, \
     dissect_array, ANGM_SYMBOLS, TOTJ_SYMBOLS
 
+from pylanczos import PyLanczos
 
 N_TOTAL_CFP_BY_RANK = {2: 5, 4: 14, 6: 27}
 RANK_BY_N_TOTAL_CFP = {val: key for key, val in N_TOTAL_CFP_BY_RANK.items()}
@@ -84,7 +85,7 @@ class MagneticSusceptibility(Store):
 
         super().__init__(title, description, label=(), units=units, fmt=fmt)
 
-    def evaluate(self):
+    def evaluate(self,eigFunction):
         ops = self.ops
         #print(ops['spin'])
         tensor_func = make_susceptibility_tensor(
@@ -255,59 +256,8 @@ def make_susceptibility_tensor(hamiltonian, spin, angm, field=0.):
     return susceptibility_tensor
 
 
-def molecular_magnetisation(temp, hamiltonian, spin, angm, field, algorithm='eigh'):
-    """ Molar molecular magnetisation in [hartree] / [mT mol]
-
-    Parameters
-    ----------
-    temp : float
-        Temperature in Kelvin.
-    hamiltonian : np.array
-        Electronic Hamiltonian in atomic units.
-    spin : np.array
-        Spin operator in the SO basis.
-    angm : np.array
-        Orbital angular momentum operator in the SO basis.
-    field : np.array
-        Magnetic field in mT at which susceptibility is measured. If None,
-        returns differential susceptibility.
-    algorithm : {'eigh', 'expm'}
-        Algorithm for the computation of the partition function.
-    """
-
-    Na = 6.02214076e23  # 1 / mol
-    kb = 3.166811563e-6  # hartree / K
-    beta = 1 / (kb * temp)  # hartree
-    au2mT = 2.35051756758e5 * 1e3  # mTesla / au
-
-    h_total = hamiltonian + zeeman_hamiltonian(spin, angm, field)
-
-    if algorithm == 'expm':
-        dim = h_total.shape[0]
-        # condition matrix by diagonal shift
-        h_shft = h_total - stop_gradient(jnp.eye(dim) * jnp.min(h_total))
-        expH = jscipy.linalg.expm(-beta * h_shft)
-        Z = jnp.trace(expH).real
-
-    elif algorithm == 'eigh':
-        print("This line is being used to calculate eigenvalues")
-        eig, vec = jnp.linalg.eigh(h_shft)
-        eig_shft = eig - stop_gradient(eig[0])
-        expH = vec @ jnp.diag(jnp.exp(-beta * eig_shft)) @ vec.T.conj()
-        Z = jnp.sum(jnp.exp(-beta * eig_shft))
-
-    else:
-        ValueError(f"Unknown algorithm {algorithm}!")
-
-    dZ = -jnp.einsum('ij,mji', expH, magmom(spin, angm) / au2mT).real
-
-    return Na * dZ / Z
-
 
 def make_molecular_magnetisation(hamiltonian, spin, angm, field):
-    #print("FIELDTIME")
-    #print(field)
-    #time.sleep(10)
     """ Molar molecular magnetisation in [hartree] / [mT mol] maker function
     for partial evaluation of matrix eigen decomposition.
 
@@ -330,7 +280,13 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     #print("EINZELKIND")
     h_total = hamiltonian + zeeman_hamiltonian(spin, angm, field)
     # condition matrix by diagonal shift
+   
     eig, vec = jnp.linalg.eigh(h_total)
+    print("numpy")
+    print(vec)
+    eig, vec = lanczos(h_total,16)
+    print("Lanczos")
+    print(vec)
     #print("ANGMOM")
     #print(eig)
     def molecular_magnetisation(temp):
@@ -342,3 +298,20 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
         return Na * dZ / Z
 
     return molecular_magnetisation
+
+
+def lanczos(matrix,approxEigs):
+    '''
+    Method to calculate Lanczos diagonalisation
+    Method 6
+    Returns eigenvalues and eigenvectors
+    '''
+    #start_lanc = time.time() # Start timer
+    #matrix = self.getHam()
+    engine = PyLanczos(matrix, True, approxEigs)  # Find maximum eigenpairs
+    eigenvalues, eigenvectors = engine.run()
+    #finish_lanc = time.time() # End timer
+    #print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
+    eigenvalues = map(np.real,eigenvalues)
+    eigenvalues = list(eigenvalues)
+    return np.sort(eigenvalues[:approxEigs]), np.sort(eigenvectors[:approxEigs])
