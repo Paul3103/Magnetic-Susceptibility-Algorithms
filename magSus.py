@@ -338,7 +338,7 @@ answer = mag.calcMagSus(field,calc_eigs='numpy')
 #answer = mag.calcMagSus(field,calc_eigs='lanczos')  
 
 #print(answer)
-angmomSus.evaluate()
+print(angmomSus.evaluate())
 #print(np.sum(np.abs(answer)))
 #print(angmomSus.evaluate())
 
