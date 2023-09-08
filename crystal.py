@@ -85,7 +85,7 @@ class MagneticSusceptibility(Store):
 
         super().__init__(title, description, label=(), units=units, fmt=fmt)
 
-    def evaluate(self,eigFunction):
+    def evaluate(self):
         ops = self.ops
         #print(ops['spin'])
         tensor_func = make_susceptibility_tensor(
@@ -287,9 +287,7 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     eig1, vec1 = lanczos(h_total,estimate)
     print("Lanczos")
     print(eig1)
-    eig2, vec2 = block_davidson_eigen(h_total)
-    print("Davidson")
-    print(eig2)
+  
     #print(np.allclose(eig,eig1,atol = 1e-10))
     def molecular_magnetisation(temp):
         beta = 1 / (kb * temp)  # hartree
@@ -319,57 +317,12 @@ def lanczos(matrix,approxEigs):
     return np.sort(eigenvalues[:approxEigs]), np.sort(eigenvectors[:approxEigs])
 
 
-def block_davidson_eigen(A, k=4, neig=16, tol=1e-9, mmax=20):
-    n = A.shape[0]
 
-    t = np.eye(n, k)  # initial trial vectors
-    v = np.zeros((n, n))  # holder for trial vectors as iterations progress
-    I = np.eye(n)  # n*n identity matrix
-    ritz = np.zeros((n, n))
-    f = np.zeros((n, n))
+fileName = "ops.hdf5"
+temperatures1 = [1.1]
+field = 0.8
 
-    iter = 0
-    for m in range(k, mmax, k):
-        iter = iter + 1
-        if iter == 1:
-            for l in range(m):
-                v[:, l] = t[:, l] / (np.linalg.norm(t[:, l]))
 
-        T = np.linalg.multi_dot([v[:, :m].T, A, v[:, :m]])
-        w, vects = np.linalg.eig(T)
+angmomSus = MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
 
-        jj = 0
-        s = w.argsort()
-        ss = w[s]
-
-        for ii in range(m):
-            f = np.diag(1. / np.diag((np.diag(np.diag(A)) - w[ii] * I)))
-            ritz[:, ii] = np.dot(f, np.linalg.multi_dot([(A - w[ii] * I), v[:, :m], vects[:, ii]]))
-            if np.linalg.norm(ritz[:, ii]) > 1e-7:
-                ritz[:, ii] = ritz[:, ii] / (np.linalg.norm(ritz[:, ii]))
-                v[:, m + jj] = ritz[:, ii]
-                jj = jj + 1
-
-        q, r = np.linalg.qr(v[:, :m + jj - 1])
-        for kk in range(m + jj - 1):
-            v[:, kk] = q[:, kk]
-
-        if iter == 1:
-            check_old = ss[:neig]
-            check_new = 1
-        elif iter == 2:
-            check_new = ss[:neig]
-        else:
-            check_old = check_new
-            check_new = ss[:neig]
-
-        check = np.linalg.norm(check_new - check_old)
-        if check < tol:
-            break
-
-    eig, eigvecs = np.linalg.eig(A)
-
-    s = eig.argsort()
-    ss = eig[s]
-
-    return ss[:neig], eigvecs[:, s[:neig]]
+print(angmomSus.evaluate())
