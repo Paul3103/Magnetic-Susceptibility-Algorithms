@@ -295,8 +295,8 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     print("Lanczos")
     #print(eig1)
     print(vec1)
-    print(np.allclose(eig,eig1))
-    #print(np.allclose(vec,vec1))
+    print("Eigenvalues are the same = "+str(np.allclose(eig,eig1)))
+    print("Eigenvectors are the same = "+str(np.allclose(vec,vec1)))
     def molecular_magnetisation(temp):
         beta = 1 / (kb * temp)  # hartree
         eig_shft = eig - stop_gradient(eig[0])
