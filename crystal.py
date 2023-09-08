@@ -279,16 +279,21 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     au2mT = 2.35051756758e5 * 1e3  # mTesla / au
     #print("EINZELKIND")
     h_total = hamiltonian + zeeman_hamiltonian(spin, angm, field)
+    #print("Full Ham")
+    
+    #print(h_total)
     # condition matrix by diagonal shift
    
-    eig, vec = jnp.linalg.eigh(h_total)
+    eig1, vec = jnp.linalg.eigh(h_total)
     print("numpy")
-    print(eig)
-    eig1, vec1 = lanczos(h_total,estimate)
-    print("Lanczos")
     print(eig1)
+    #print(vec)
+
+    eig, vec1 = lanczos(h_total,16)
+    print("Lanczos")
+    #print(eig1)
+    #print(vec1)
   
-    #print(np.allclose(eig,eig1,atol = 1e-10))
     def molecular_magnetisation(temp):
         beta = 1 / (kb * temp)  # hartree
         eig_shft = eig - stop_gradient(eig[0])
@@ -306,15 +311,44 @@ def lanczos(matrix,approxEigs):
     Method 6
     Returns eigenvalues and eigenvectors
     '''
+
+    def calculate_eigenvectors(matrix, eigenvalues, n):
+        """
+        Calculate n eigenvectors corresponding to the given eigenvalues for a square matrix.
+
+        Parameters:
+            matrix (numpy.ndarray): The square matrix for which eigenvectors are calculated.
+            eigenvalues (numpy.ndarray): The eigenvalues for which eigenvectors are calculated.
+            n (int): The number of eigenvectors to compute per eigenvalue.
+
+        Returns:
+            eigenvectors (numpy.ndarray): A matrix where each column represents an eigenvector.
+        """
+        eigenvectors = []
+        
+        for eigenvalue in eigenvalues:
+            # Calculate the eigenvectors for each eigenvalue using np.linalg.eig
+            eigval, eigvec = np.linalg.eig(matrix)
+            
+            # Find the indices of the top n eigenvectors based on eigenvalue magnitude
+            top_indices = np.argsort(np.abs(eigval - eigenvalue))[:n]
+            
+            # Extract the corresponding eigenvectors and append them to the result
+            eigenvectors.extend(eigvec[:, top_indices])
+        
+        return np.array(eigenvectors)
+
     #start_lanc = time.time() # Start timer
     #matrix = self.getHam()
     engine = PyLanczos(matrix, True, approxEigs)  # Find maximum eigenpairs
-    eigenvalues, eigenvectors = engine.run()
+    eigenvalues, eigenvectors = engine.run() #These eigenvectors are wrong/different to numpy's
     #finish_lanc = time.time() # End timer
     #print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
     eigenvalues = map(np.real,eigenvalues)
     eigenvalues = list(eigenvalues)
+    #eigenvectors = calculate_eigenvectors(matrix,eigenvalues,16)
     return np.sort(eigenvalues[:approxEigs]), np.sort(eigenvectors[:approxEigs])
+
 
 
 

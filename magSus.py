@@ -229,7 +229,7 @@ class magSusCalculator:
             
     def hellmanFeynman(self,dHdB,eigenvectors):
         first = np.dot(eigenvectors,dHdB)
-        second = np.dot(first.conjugate().T,eigenvectors)
+        second = np.dot(first.T.conj(),eigenvectors)
         return second
 
     def calcMagSus(self, B, calc_eigs = 'lanczos'):
