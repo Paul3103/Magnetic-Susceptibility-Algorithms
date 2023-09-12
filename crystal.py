@@ -285,18 +285,22 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     
     #print(h_total)
     # condition matrix by diagonal shift
+    start_numpy = time.time()
    
-    eig1, vec = jnp.linalg.eigh(np.array(h_total))
-    print("numpy")
+    eig, vec = jnp.linalg.eigh(np.array(h_total))
+    end_numpy = time.time()
+    print("numpy in ", end_numpy-start_numpy," seconds")
     #print(eig1)
     #print(vec)
 
-    eig, vec1 = lanczos(h_total,estimate)
-    print("Lanczos")
+    eig1, vec1 = lanczos(h_total,estimate)
+    #print("Lanczos")
     #print(eig1)
-    print(vec1)
-    print("Eigenvalues are the same = "+str(np.allclose(eig,eig1)))
-    print("Eigenvectors are the same = "+str(np.allclose(vec,vec1)))
+    #print(vec1)
+    #print(eig)
+    if len(eig) == len(eig1):
+        print("Eigenvalues are the same = "+str(np.allclose(eig,eig1)))
+        print("Eigenvectors are the same = "+str(np.allclose(vec,vec1)))
     def molecular_magnetisation(temp):
         beta = 1 / (kb * temp)  # hartree
         eig_shft = eig - stop_gradient(eig[0])
@@ -315,12 +319,12 @@ def lanczos(matrix,approxEigs):
     Returns eigenvalues and eigenvectors
     '''
 
-    #start_lanc = time.time() # Start timer
+    start_lanc = time.time() # Start timer
     #matrix = self.getHam()
     engine = PyLanczos(np.array(matrix), True, approxEigs)  # Find maximum eigenpairs
     eigenvalues, eigenvectors = engine.run() #These eigenvectors are wrong/different to numpy's
-    #finish_lanc = time.time() # End timer
-    #print("lanczos = ", eigenvalues[:self.getEig()], ";", finish_lanc - start_lanc, "seconds")
+    finish_lanc = time.time() # End timer
+    print("lanczos = ",finish_lanc - start_lanc, "seconds")
     eigenvalues = map(np.real,eigenvalues)
     eigenvalues = list(eigenvalues)
 
@@ -329,7 +333,7 @@ def lanczos(matrix,approxEigs):
 
 
 
-fileName = "ops.hdf5"
+fileName = "ops_double.hdf5"
 temperatures1 = [1.1]
 field = 0.8
 
