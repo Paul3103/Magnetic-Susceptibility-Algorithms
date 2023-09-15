@@ -273,7 +273,7 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
         Magnetic field in mT at which susceptibility is measured. If None,
         returns differential susceptibility.
     """
-    estimate = 16 #number of eigenvalues returned by the approximations
+    estimate = 8 #number of eigenvalues returned by the approximations
     Na = 6.02214076e23  # 1 / mol
     kb = 3.166811563e-6  # hartree / K
     au2mT = 2.35051756758e5 * 1e3  # mTesla / au
@@ -294,6 +294,7 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     #print(vec)
 
     eig1, vec1 = lanczos(h_total,estimate)
+    print(eig1)
     #print("Lanczos")
     #print(eig1)
     #print(vec1)
@@ -333,7 +334,7 @@ def lanczos(matrix,approxEigs):
 
 
 
-fileName = "ops_double.hdf5"
+fileName = "ops(1).hdf5"
 temperatures1 = [1.1]
 field = 0.8
 
