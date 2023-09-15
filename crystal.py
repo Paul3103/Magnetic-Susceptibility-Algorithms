@@ -293,7 +293,7 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     #print(eig1)
     #print(vec)
     start_davidson = time.time()
-    eig1, vec1 = block_davidson(h_total,estimate)
+    eig1, vec1 = davidson(h_total,estimate)
     #eig1,vec1 = lanczos(h_total, estimate)
     end_davidson = time.time()
     print("Davidson in", end_davidson-start_davidson, "seconds")
@@ -336,15 +336,14 @@ def lanczos(matrix,approxEigs):
     return np.sort(eigenvalues[:approxEigs]), np.sort(eigenvectors[:approxEigs])
 
 
-def block_davidson(A, neig):
+def davidson(A, neig):
     n = A.shape[0]
     tol = 1e-9             # Convergence tolerance
     mmax = 20              # Maximum number of iterations
 
     # Setup the subspace trial vectors
-    k = 16
+    k = neig
 
-    neig = 16
     t = np.eye(n, k) # initial trial vectors
     v = np.zeros((n, n)) # holder for trial vectors as iterations progress
     I = np.eye(n) # n*n identity matrix
@@ -358,7 +357,6 @@ def block_davidson(A, neig):
     #-------------------------------------------------------------------------------
     # Begin iterations  
     #-------------------------------------------------------------------------------
-    start = time.time()
     iter = 0
     for m in range(k, mmax, k):
         iter = iter + 1
@@ -404,7 +402,6 @@ def block_davidson(A, neig):
         eigenvectors.append(vects[:, ii])
 
     end = time.time()
-    print ('Block Davidson time:', end - start)
     
     start = time.time()
     eig, eigvecs = np.linalg.eig(A)
