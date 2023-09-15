@@ -273,7 +273,7 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
         Magnetic field in mT at which susceptibility is measured. If None,
         returns differential susceptibility.
     """
-    estimate = 8 #number of eigenvalues returned by the approximations
+    estimate = 16 #number of eigenvalues returned by the approximations
     Na = 6.02214076e23  # 1 / mol
     kb = 3.166811563e-6  # hartree / K
     au2mT = 2.35051756758e5 * 1e3  # mTesla / au
@@ -292,9 +292,13 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     print("numpy in ", end_numpy-start_numpy," seconds")
     #print(eig1)
     #print(vec)
+    start_davidson = time.time()
+    eig1, vec1 = block_davidson(h_total,estimate)
+    #eig1,vec1 = lanczos(h_total, estimate)
+    end_davidson = time.time()
+    print("Davidson in", end_davidson-start_davidson, "seconds")
+    #print(eig1)
 
-    eig1, vec1 = lanczos(h_total,estimate)
-    print(eig1)
     #print("Lanczos")
     #print(eig1)
     #print(vec1)
@@ -332,9 +336,87 @@ def lanczos(matrix,approxEigs):
     return np.sort(eigenvalues[:approxEigs]), np.sort(eigenvectors[:approxEigs])
 
 
+def block_davidson(A, neig):
+    n = A.shape[0]
+    tol = 1e-9             # Convergence tolerance
+    mmax = 20              # Maximum number of iterations
+
+    # Setup the subspace trial vectors
+    k = 16
+
+    neig = 16
+    t = np.eye(n, k) # initial trial vectors
+    v = np.zeros((n, n)) # holder for trial vectors as iterations progress
+    I = np.eye(n) # n*n identity matrix
+    ritz = np.zeros((n, n))
+    f = np.zeros((n, n))
+    
+    # Lists to store eigenvalues and eigenvectors
+    eigenvalues = []
+    eigenvectors = []
+
+    #-------------------------------------------------------------------------------
+    # Begin iterations  
+    #-------------------------------------------------------------------------------
+    start = time.time()
+    iter = 0
+    for m in range(k, mmax, k):
+        iter = iter + 1
+        if iter == 1:  # for the first iteration, add normalized guess vectors to matrix v
+            for l in range(m):
+                v[:, l] = t[:, l] / (np.linalg.norm(t[:, l]))
+        # Matrix-vector products, form the projected Hamiltonian in the subspace
+        T = np.linalg.multi_dot([v[:, :m].T, A, v[:, :m]]) # selects the fastest evaluation order
+        w, vects = np.linalg.eig(T) # Diagonalize the subspace Hamiltonian
+        jj = 0
+        s = w.argsort()
+        ss = w[s]
+        #***************************************************************************
+        # For each eigenvector of T, build a Ritz vector, precondition it and check
+        # if the norm is greater than a set threshold.
+        #***************************************************************************
+        for ii in range(m): # for each new eigenvector of T
+            f = np.diag(1. / np.diag((np.diag(np.diag(A)) - w[ii] * I)))
+            ritz[:, ii] = np.dot(f, np.linalg.multi_dot([(A - w[ii] * I), v[:, :m], vects[:, ii]]))
+            if np.linalg.norm(ritz[:, ii]) > 1e-7:
+                ritz[:, ii] = ritz[:, ii] / (np.linalg.norm(ritz[:, ii]))
+                v[:, m + jj] = ritz[:, ii]
+                jj = jj + 1
+        q, r = np.linalg.qr(v[:, :m + jj - 1])
+        for kk in range(m + jj - 1):
+            v[:, kk] = q[:, kk]
+
+        if iter == 1: 
+            check_old = ss[:neig]
+            check_new = 1
+        elif iter == 2:
+            check_new = ss[:neig]
+        else: 
+            check_old = check_new
+            check_new = ss[:neig]
+        check = np.linalg.norm(check_new - check_old)
+        if check < tol:       
+            break
+
+    # Store eigenvalues and eigenvectors
+    for ii in range(neig):
+        eigenvalues.append(ss[ii])
+        eigenvectors.append(vects[:, ii])
+
+    end = time.time()
+    print ('Block Davidson time:', end - start)
+    
+    start = time.time()
+    eig, eigvecs = np.linalg.eig(A)
+    end = time.time() 
+    s = eig.argsort()
+    ss = eig[s]
+    # Return eigenvalues and eigenvectors
+    return eigenvalues, eigenvectors
 
 
-fileName = "ops(1).hdf5"
+
+fileName = "ops.hdf5"
 temperatures1 = [1.1]
 field = 0.8
 
