@@ -286,23 +286,27 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     #print(h_total)
     # condition matrix by diagonal shift
     start_numpy = time.time()
-   
     eig, vec = jnp.linalg.eigh(np.array(h_total))
     end_numpy = time.time()
-    print("numpy in ", end_numpy-start_numpy," seconds")
-    #print(eig1)
-    #print(vec)
-    start_davidson = time.time()
-    eig1, vec1 = davidson(h_total,estimate)
-    #eig1,vec1 = lanczos(h_total, estimate)
-    end_davidson = time.time()
-    print("Davidson in", end_davidson-start_davidson, "seconds")
-    #print(eig1)
+    numpy_time = end_numpy - start_numpy
 
-    #print("Lanczos")
-    #print(eig1)
-    #print(vec1)
-    #print(eig)
+    print("NumPy took", numpy_time, "seconds")
+
+    start_davidson = time.time()
+    eig1, vec1 = davidson(h_total, estimate)
+    end_davidson = time.time()
+    davidson_time = end_davidson - start_davidson
+
+    print("Davidson took", davidson_time, "seconds")
+
+    if numpy_time < davidson_time:
+        print("NumPy is quicker.")
+    elif davidson_time < numpy_time:
+        print("Davidson is quicker.")
+    else:
+        print("Both NumPy and Davidson took the same amount of time.")
+
+        
     if len(eig) == len(eig1):
         print("Eigenvalues are the same = "+str(np.allclose(eig,eig1)))
         print("Eigenvectors are the same = "+str(np.allclose(vec,vec1)))
