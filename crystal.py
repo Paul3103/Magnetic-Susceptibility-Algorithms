@@ -298,7 +298,9 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     davidson_time = end_davidson - start_davidson
 
     print("Davidson took", davidson_time, "seconds")
-
+    start_l = time.time()
+    #eig2, vec2 = lanczos(h_total,estimate)
+    #print("Lanczos took",time.time()-start_l )
     if numpy_time < davidson_time:
         print("NumPy is quicker.")
     elif davidson_time < numpy_time:
@@ -333,7 +335,7 @@ def lanczos(matrix,approxEigs):
     engine = PyLanczos(np.array(matrix), True, approxEigs)  # Find maximum eigenpairs
     eigenvalues, eigenvectors = engine.run() #These eigenvectors are wrong/different to numpy's
     finish_lanc = time.time() # End timer
-    print("lanczos = ",finish_lanc - start_lanc, "seconds")
+    #print("lanczos = ",finish_lanc - start_lanc, "seconds")
     eigenvalues = map(np.real,eigenvalues)
     eigenvalues = list(eigenvalues)
 
@@ -343,7 +345,7 @@ def lanczos(matrix,approxEigs):
 def davidson(A, neig):
     n = A.shape[0]
     tol = 1e-9             # Convergence tolerance
-    mmax = 20              # Maximum number of iterations
+    mmax = 18              # Maximum number of iterations
 
     # Setup the subspace trial vectors
     k = neig
@@ -369,7 +371,7 @@ def davidson(A, neig):
                 v[:, l] = t[:, l] / (np.linalg.norm(t[:, l]))
         # Matrix-vector products, form the projected Hamiltonian in the subspace
         T = np.linalg.multi_dot([v[:, :m].T, A, v[:, :m]]) # selects the fastest evaluation order
-        w, vects = np.linalg.eig(T) # Diagonalize the subspace Hamiltonian
+        w, vects = np.linalg.eigh(T) # Diagonalize the subspace Hamiltonian
         jj = 0
         s = w.argsort()
         ss = w[s]
