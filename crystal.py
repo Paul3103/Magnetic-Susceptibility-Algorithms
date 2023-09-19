@@ -306,7 +306,7 @@ def make_molecular_magnetisation(hamiltonian, spin, angm, field):
     else:
         print("Both NumPy and Davidson took the same amount of time.")
 
-        
+
     if len(eig) == len(eig1):
         print("Eigenvalues are the same = "+str(np.allclose(eig,eig1)))
         print("Eigenvectors are the same = "+str(np.allclose(vec,vec1)))
@@ -417,7 +417,7 @@ def davidson(A, neig):
 
 
 
-fileName = "ops.hdf5"
+fileName = "ops(1).hdf5"
 temperatures1 = [1.1]
 field = 0.8
 
