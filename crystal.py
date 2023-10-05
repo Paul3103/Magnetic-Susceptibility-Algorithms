@@ -43,8 +43,6 @@ config.update("jax_enable_x64", True)
 
 
 
-
-
 class FromFile:
 
     def __init__(self, h_file, **kwargs):
@@ -345,7 +343,7 @@ def lanczos(matrix,approxEigs):
 def davidson(A, neig):
     n = A.shape[0]
     tol = 1e-9             # Convergence tolerance
-    mmax = 18              # Maximum number of iterations
+    mmax = 20           # Maximum number of iterations
 
     # Setup the subspace trial vectors
     k = neig
@@ -371,7 +369,8 @@ def davidson(A, neig):
                 v[:, l] = t[:, l] / (np.linalg.norm(t[:, l]))
         # Matrix-vector products, form the projected Hamiltonian in the subspace
         T = np.linalg.multi_dot([v[:, :m].T, A, v[:, :m]]) # selects the fastest evaluation order
-        w, vects = np.linalg.eigh(T) # Diagonalize the subspace Hamiltonian
+        #w, vects = np.linalg.eigh(T) # Diagonalize the subspace Hamiltonian
+        w, vects = lanczos(T,neig)
         jj = 0
         s = w.argsort()
         ss = w[s]
@@ -419,7 +418,7 @@ def davidson(A, neig):
 
 
 
-fileName = "ops(1).hdf5"
+fileName = "ops.hdf5"
 temperatures1 = [1.1]
 field = 0.8
 
@@ -427,3 +426,10 @@ field = 0.8
 angmomSus = MagneticSusceptibilityFromFile(fileName,temperatures=temperatures1,field=0.8 , differential = True)
 
 print(angmomSus.evaluate())
+
+'''  from jax import core, ad, lax
+NumPy took 292.326966047287 seconds
+/Users/Paul3103/Documents/GitHub/Magnetic-Susceptibility-Algorithms/crystal.py:382: ComplexWarning: Casting complex values to real discards the imaginary part
+  ritz[:, ii] = np.dot(f, np.linalg.multi_dot([(A - w[ii] * I), v[:, :m], vects[:, ii]]))
+Davidson took 308.62756299972534 seconds
+NumPy is quicker.'''
